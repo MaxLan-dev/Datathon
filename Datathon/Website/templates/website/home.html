@@ -1,0 +1,75 @@
+{% extends 'website/base.html' %}
+{% load static %}
+{% block content %}
+<div class="container-fluid">
+    <h1 class="main-title">Welcome to Exoplanet Explorer</h1>
+    <div class="row">
+        <!-- Filter Bar -->
+        <div class="col-md-3">
+            <h2 class="text-light">Filters</h2>
+            <form method="get" action="." id="filter-form">
+                <div class="form-group">
+                    <label for="telescope_diameter" class="text-light">Telescope Diameter (m): <span id="telescope_diameter_value">{{ filters.telescope_diameter }}</span></label>
+                    <input type="range" class="form-control-range custom-range" id="telescope_diameter" name="telescope_diameter" min="1" max="100" step="0.1" value="{{ filters.telescope_diameter }}">
+                </div>
+                <div class="form-group">
+                    <label for="min_snr" class="text-light">Minimum SNR: <span id="min_snr_value">{{ filters.min_snr }}</span></label>
+                    <input type="range" class="form-control-range custom-range" id="min_snr" name="min_snr" min="1" max="1000" step="1" value="{{ filters.min_snr }}">
+                </div>
+                <div class="form-group">
+                    <label for="max_distance" class="text-light">Maximum Distance (parsecs): <span id="max_distance_value">{{ filters.max_distance }}</span></label>
+                    <input type="range" class="form-control-range custom-range" id="max_distance" name="max_distance" min="1" max="10000" step="10" value="{{ filters.max_distance }}">
+                </div>
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="habitable_only" name="habitable_only" {% if filters.habitable_only == 'on' %}checked{% endif %}>
+                    <label class="form-check-label text-light" for="habitable_only">Habitable Only</label>
+                </div>
+                <button type="submit" class="btn btn-primary mt-3">Apply Filters</button>
+            </form>
+        </div>
+        <div class="planet-gallery">
+            <button class="nav-arrow left" onclick="navigatePlanets(-1)">&lt;</button>
+            <div id="planet-container"></div>
+            <button class="nav-arrow right" onclick="navigatePlanets(1)">&gt;</button>
+        </div>
+        <!-- Exoplanet Information -->
+        <div class="col-md-9">
+            <h1>Exoplanet Explorer</h1>
+        
+            <h2>Cosmic Statistics</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <ul class="list-unstyled">
+                        <li><strong>Total Exoplanets:</strong> <span id="total-planets">{{ exoplanet_data.total_planets }}</span></li>
+                        <li><strong>Average SNR:</strong> <span id="avg-snr">{{ exoplanet_data.avg_snr|floatformat:2 }}</span></li>
+                        <li><strong>Median SNR:</strong> <span id="median-snr">{{ exoplanet_data.median_snr|floatformat:2 }}</span></li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <ul class="list-unstyled">
+                        <li><strong>SNR Standard Deviation:</strong> <span id="std-snr">{{ exoplanet_data.std_snr|floatformat:2 }}</span></li>
+                        <li><strong>Maximum SNR:</strong> <span id="max-snr">{{ exoplanet_data.max_snr|floatformat:2 }}</span></li>
+                        <li><strong>Minimum SNR:</strong> <span id="min-snr">{{ exoplanet_data.min_snr|floatformat:2 }}</span></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Exoplanet Gallery -->
+            <!-- <h2>Exoplanet Gallery</h2> -->
+            
+        </div>
+    </div>
+
+    <!-- Canvas Container for Three.js Animation -->
+    <div id="canvas-container"></div>
+
+    <!-- Planet Info Modal -->
+    <div id="planet-info-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modal-planet-name"></h2>
+            <p id="modal-planet-info"></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
