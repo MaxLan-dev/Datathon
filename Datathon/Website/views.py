@@ -31,3 +31,8 @@ def home_page_view(request):
     template_name = 'website/home.html'
     
     return render(request, template_name)
+
+def heatmap_visual(request):
+    template_name = 'website/heatmap.html'
+    
+    return render(request, template_name)
