@@ -1,38 +1,40 @@
 from django.shortcuts import render
-import csv
 from django.conf import settings
 import os
-import numpy as np
-import matplotlib.pyplot as plt
-from scipy import stats
-from django.http import JsonResponse
 import pandas as pd
-relevant_keywords = [
-    "No Park",        # covers violations like "P16No Park" or "MP16-No Park"
-    "No Stop",        # covers "MP06-No Stop", "P06No Stop", etc.
-    "Overtime",       # covers "P05Overtime", "P12L/Z Overtime", etc.
-    "Rush Hour",      # covers "P03Rush Hour", "MP03-Rush Hour", etc.
-    "Boulevard",      # covers "MP20-Parked on a Boulevard"
-    "Double Parked"   # covers "MP23-Double Parked"
-]
-df = pd.read_csv("parking_violations.csv")
-mask = df['Violation'].apply(lambda violation: any(keyword.lower() in violation.lower() 
-                                                    for keyword in relevant_keywords))
+import folium
+from folium.plugins import HeatMap
 
-# Filter the DataFrame using the mask.
-filtered_df = df[mask]
-
-# Print the filtered DataFrame to see the result.
-print(filtered_df)
-
-# Optionally, you can save the filtered data to a new CSV file.
-filtered_df.to_csv("filtered_parking_violations.csv", index=False)
 def home_page_view(request):
-    template_name = 'website/home.html'
+    # Build the full path to the CSV file.
+    df = pd.read_csv("parking_violations.csv")
     
-    return render(request, template_name)
-
-def heatmap_visual(request):
-    template_name = 'website/heatmap.html'
+    # Extract latitude and longitude from the "Location" column.
+    # Assumes the format is "(lat, lon)"
+    df[['Latitude', 'Longitude']] = df['Location'].str.extract(r'\(([-\d.]+),\s*([-\d.]+)\)')
     
-    return render(request, template_name)
+    # Convert to float
+    df['Latitude'] = df['Latitude'].astype(float)
+    df['Longitude'] = df['Longitude'].astype(float)
+    
+    # Remove rows with missing coordinate values.
+    df.dropna(subset=['Latitude', 'Longitude'], inplace=True)
+    
+    # Create a folium map centered at the average coordinates.
+    m = folium.Map(location=[df['Latitude'].mean(), df['Longitude'].mean()], zoom_start=12)
+    
+    # Prepare the heatmap data (list of [lat, lon] pairs).
+    heat_data = df[['Latitude', 'Longitude']].values.tolist()
+    
+    # Add a heatmap layer.
+    HeatMap(heat_data).add_to(m)
+    
+    # Get the HTML representation of the map (without saving to a file).
+    map_html = m._repr_html_()
+    
+    # Pass the map HTML into the template context.
+    context = {
+        'map': map_html,
+    }
+    
+    return render(request, 'website/home.html', context)
